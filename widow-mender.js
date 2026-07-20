@@ -1,5 +1,5 @@
 /*!
- * Widowmender: kills typographic widows by nudging tracking (letter-spacing)
+ * Widowmender: mends typographic widows by nudging tracking (letter-spacing)
  * on just the tail of a paragraph, falling back to a non-breaking space join
  * when tightening alone can't rescue the orphaned word.
  *
@@ -40,7 +40,7 @@
     return part !== '' && !/^\s+$/.test(part);
   }
 
-  // Wrap each run of non-whitespace text in a <span class="wk-word">,
+  // Wrap each run of non-whitespace text in a <span class="wm-word">,
   // walking the DOM so existing inline markup (em, a, strong, ...) is preserved.
   function wrapWords(el) {
     function walk(node) {
@@ -52,7 +52,7 @@
           if (part === '') return;
           if (isWordChar(part)) {
             const span = document.createElement('span');
-            span.className = 'wk-word';
+            span.className = 'wm-word';
             span.textContent = part;
             frag.appendChild(span);
           } else {
@@ -61,16 +61,16 @@
         });
         node.parentNode.replaceChild(frag, node);
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        if (node.classList && node.classList.contains('wk-word')) return;
+        if (node.classList && node.classList.contains('wm-word')) return;
         Array.from(node.childNodes).forEach(walk);
       }
     }
     Array.from(el.childNodes).forEach(walk);
   }
 
-  // Group .wk-word spans into visual lines by their rendered top offset.
+  // Group .wm-word spans into visual lines by their rendered top offset.
   function getLines(el) {
-    const words = el.querySelectorAll('.wk-word');
+    const words = el.querySelectorAll('.wm-word');
     const lines = [];
     let lastTop = null;
     words.forEach((w) => {
@@ -119,7 +119,7 @@
         range.setStartBefore(targetWords[0]);
         range.setEndAfter(targetWords[targetWords.length - 1]);
         wrapper = document.createElement('span');
-        wrapper.className = 'wk-tighten';
+        wrapper.className = 'wm-tighten';
         range.surroundContents(wrapper);
       } catch (e) {
         wrapper = null; // markup crosses boundaries the Range API won't span cleanly
@@ -136,7 +136,7 @@
         if (last.length >= opts.minLastLineWords || lines.length < origLineCount) {
           method = 'tighten';
           appliedSpacing = spacing;
-          wrapper.dataset.wkSpacing = wrapper.style.letterSpacing;
+          wrapper.dataset.wmSpacing = wrapper.style.letterSpacing;
           break;
         }
       }
@@ -147,7 +147,7 @@
       // Guaranteed fallback: glue the last two words with a non-breaking
       // space. They'll either both fit on the prior line, or wrap down
       // together; either way the widow can never be a lone word again.
-      const words = Array.from(el.querySelectorAll('.wk-word'));
+      const words = Array.from(el.querySelectorAll('.wm-word'));
       if (words.length >= 2) {
         const lastW = words[words.length - 1];
         const prevW = words[words.length - 2];

@@ -131,14 +131,14 @@
   .wm-drag-hint b{ color: var(--proof); }
 
   /* Widowmender's own runtime marks */
-  .wk-tighten{ position: relative; }
-  .wk-tighten::after{
-    content: attr(data-wk-spacing);
+  .wm-tighten{ position: relative; }
+  .wm-tighten::after{
+    content: attr(data-wm-spacing);
     position: absolute; left: 0; bottom: -15px;
     font-family:'IBM Plex Mono', monospace; font-size: 9px; color: var(--proof);
     opacity: .85; white-space: nowrap;
   }
-  .wm-show-marks .wk-tighten{ text-decoration: underline wavy var(--proof) 1.5px; text-underline-offset: 4px; }
+  .wm-show-marks .wm-tighten{ text-decoration: underline wavy var(--proof) 1.5px; text-underline-offset: 4px; }
 
   /* Code panel */
   .wm-code{

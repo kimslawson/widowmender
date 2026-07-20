@@ -27,9 +27,9 @@ const FIXTURE_HTML = `
 
 // In-page helpers, installed on every test page.
 const HELPERS = () => {
-  // Group the library's .wk-word spans into rendered lines.
+  // Group the library's .wm-word spans into rendered lines.
   window.measure = (el) => {
-    const words = Array.from(el.querySelectorAll('.wk-word'));
+    const words = Array.from(el.querySelectorAll('.wm-word'));
     const lines = [];
     let lastTop = null;
     for (const w of words) {
@@ -166,8 +166,8 @@ await test('reports the applied tracking when it mends by tightening', async () 
   const result = await page.evaluate(() => window.__results[window.__results.length - 1]);
   if (result.method === 'tighten') {
     assert.ok(result.spacing > 0 && result.spacing <= 0.06, `spacing out of range: ${result.spacing}`);
-    const annotated = await page.evaluate(() => document.querySelector('.wk-tighten')?.dataset.wkSpacing || '');
-    assert.match(annotated, /^-0\.\d{3}em$/, `data-wk-spacing should be a CSS length, got "${annotated}"`);
+    const annotated = await page.evaluate(() => document.querySelector('.wm-tighten')?.dataset.wmSpacing || '');
+    assert.match(annotated, /^-0\.\d{3}em$/, `data-wm-spacing should be a CSS length, got "${annotated}"`);
   }
   await page.close();
 });
@@ -183,7 +183,7 @@ await test('leaves a paragraph with a healthy last line untouched', async () => 
   assert.equal(result.method, 'none');
   const state = await page.evaluate(() => ({
     text: document.getElementById('p').textContent,
-    tightened: !!document.querySelector('.wk-tighten'),
+    tightened: !!document.querySelector('.wm-tighten'),
     hasNbsp: document.getElementById('p').textContent.includes(' '),
   }));
   assert.equal(state.text, FIXTURE_TEXT, 'text content must be unchanged');
@@ -275,7 +275,7 @@ await test('destroy() restores the original markup exactly and stops re-running'
   const original = await page.evaluate(() => document.getElementById('p').innerHTML);
 
   await initAndSettle(page, '.widow');
-  const wrapped = await page.evaluate(() => document.querySelectorAll('#p .wk-word').length);
+  const wrapped = await page.evaluate(() => document.querySelectorAll('#p .wm-word').length);
   assert.ok(wrapped > 0, 'words should be wrapped while active');
 
   await page.evaluate(() => window.__wm.destroy());
@@ -304,15 +304,15 @@ await test('two instances keep independent state (destroying one leaves the othe
 
   await page.evaluate(() => window.__wmA.destroy());
   const state = await page.evaluate(() => ({
-    aWrapped: document.querySelectorAll('#pa .wk-word').length,
-    bWrapped: document.querySelectorAll('#pb .wk-word').length,
+    aWrapped: document.querySelectorAll('#pa .wm-word').length,
+    bWrapped: document.querySelectorAll('#pb .wm-word').length,
   }));
   assert.equal(state.aWrapped, 0, 'destroyed instance A must unwrap its element');
   assert.ok(state.bWrapped > 0, 'instance B must be unaffected by destroying A');
 
   // B must still be able to reprocess.
   await page.evaluate(() => window.__wmB.refresh());
-  const bStill = await page.evaluate(() => document.querySelectorAll('#pb .wk-word').length);
+  const bStill = await page.evaluate(() => document.querySelectorAll('#pb .wm-word').length);
   assert.ok(bStill > 0, 'instance B must still work after A is destroyed');
   await page.close();
 });
