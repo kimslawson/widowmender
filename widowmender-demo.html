@@ -1,0 +1,409 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper: #F6F2E8;
+    --paper-alt: #EEE8D9;
+    --ink: #1C1A16;
+    --ink-soft: #5B564C;
+    --ink-faint: #8B8474;
+    --rule: #CBC2AA;
+    --rule-soft: #DCD5C2;
+    --proof: #B23A2E;
+    --proof-soft: #EAD3CE;
+    --brass: #8C7A3E;
+  }
+
+  *{ box-sizing: border-box; }
+
+  .wm-root{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, serif;
+    padding: 0;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .wm-root::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events:none;
+    z-index: 0;
+  }
+
+  .wm-shell{ position:relative; z-index:1; max-width: 720px; margin: 0 auto; padding: 40px 28px 56px; }
+
+  /* Masthead */
+  .wm-masthead{ text-align:center; border-bottom: 3px double var(--ink); padding-bottom: 14px; margin-bottom: 6px; }
+  .wm-kicker{
+    font-family:'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--brass); margin: 0 0 6px;
+  }
+  .wm-title{
+    font-size: 46px; font-weight: 700; letter-spacing: -0.01em; margin: 0; line-height: 1;
+  }
+  .wm-sub{
+    font-style: italic; color: var(--ink-soft); font-size: 15px; margin: 10px 0 0;
+  }
+  .wm-meta{
+    display:flex; justify-content: space-between; font-family:'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing:.08em; text-transform: uppercase; color: var(--ink-faint);
+    border-bottom: 1px solid var(--rule); padding-bottom: 10px; margin-bottom: 30px;
+  }
+
+  .wm-lede{ font-size: 17px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 34px; }
+  .wm-lede strong{ color: var(--ink); font-weight: 600; }
+
+  section.wm-section{ margin-bottom: 40px; }
+  .wm-section-head{
+    display:flex; align-items:baseline; gap:10px; margin-bottom: 12px;
+  }
+  .wm-num{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color: var(--proof);
+    border: 1px solid var(--proof); border-radius: 2px; padding: 1px 6px;
+  }
+  .wm-h2{ font-size: 20px; font-weight: 700; margin: 0; }
+  .wm-section-desc{ font-size: 14.5px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.55; }
+
+  /* Illustration panel: hand-set widow example */
+  .wm-illus{
+    background: var(--paper-alt); border: 1px solid var(--rule); border-radius: 3px;
+    padding: 22px 24px; font-size: 17px; line-height: 1.6; max-width: 360px;
+    position: relative;
+  }
+  .wm-illus .wm-widow-line{ position: relative; display:inline; }
+  .wm-illus .wm-widow-word{ position: relative; }
+  .wm-mark{
+    position:absolute; left:-2px; top: 100%;
+    font-family:'Caveat', cursive; font-size: 20px; color: var(--proof);
+    white-space: nowrap; transform: rotate(-3deg);
+  }
+  .wm-mark svg{ display:block; }
+  .wm-illus-caption{
+    font-family:'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing:.06em; margin-top: 30px;
+  }
+
+  /* Playground */
+  .wm-playground{
+    border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-alt);
+    overflow: hidden;
+  }
+  .wm-playground-bar{
+    display:flex; align-items:center; justify-content: space-between; gap: 10px;
+    padding: 8px 12px; border-bottom: 1px solid var(--rule);
+    font-family:'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .wm-status{ display:flex; align-items:center; gap:6px; color: var(--ink-soft); }
+  .wm-status-dot{ width:7px; height:7px; border-radius:50%; background: var(--ink-faint); flex:0 0 auto; }
+  .wm-status.is-fixed .wm-status-dot{ background: var(--proof); }
+  .wm-status.is-clean .wm-status-dot{ background: #5c7a52; }
+
+  .wm-resizer{
+    resize: horizontal; overflow: auto; min-width: 140px; max-width: 100%; width: 320px;
+    padding: 22px 24px 26px; background: var(--paper);
+    border-right: 1px dashed var(--rule);
+  }
+  .wm-resizer p, .wm-resizer h3{ margin: 0; }
+  .wm-resizer p{ font-size: 16.5px; line-height: 1.6; }
+  .wm-resizer h3{ font-size: 21px; font-weight: 700; line-height: 1.25; }
+
+  .wm-drag-hint{
+    font-family:'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-faint);
+    padding: 8px 12px; letter-spacing: .04em;
+  }
+  .wm-drag-hint b{ color: var(--proof); }
+
+  /* Widowmender's own runtime marks */
+  .wk-tighten{ position: relative; }
+  .wk-tighten::after{
+    content: attr(data-wk-spacing);
+    position: absolute; left: 0; bottom: -15px;
+    font-family:'IBM Plex Mono', monospace; font-size: 9px; color: var(--proof);
+    opacity: .85; white-space: nowrap;
+  }
+  .wm-show-marks .wk-tighten{ text-decoration: underline wavy var(--proof) 1.5px; text-underline-offset: 4px; }
+
+  /* Code panel */
+  .wm-code{
+    background: var(--ink); color: #EDE7D6; border-radius: 3px; padding: 18px 20px;
+    font-family:'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.65;
+    overflow-x: auto; white-space: pre;
+  }
+  .wm-code .c1{ color: #8C9C7A; }
+  .wm-code .c2{ color: #D9A57A; }
+  .wm-code .c3{ color: #7AA7C9; }
+
+  .wm-footer{
+    border-top: 1px solid var(--rule); margin-top: 8px; padding-top: 16px;
+    font-family:'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-faint);
+    display:flex; justify-content: space-between; letter-spacing:.04em;
+  }
+
+  @media (max-width: 480px){
+    .wm-title{ font-size: 34px; }
+    .wm-shell{ padding: 28px 16px 40px; }
+  }
+</style>
+
+<div class="wm-root">
+  <div class="wm-shell">
+
+    <div class="wm-masthead">
+      <p class="wm-kicker">A small JS enhancement</p>
+      <h1 class="wm-title">Widowmender</h1>
+      <p class="wm-sub">The opposite of a widowmaker — it reunites the last word with its line.</p>
+    </div>
+    <div class="wm-meta">
+      <span>Vol. 1 · No. widows</span>
+      <span>Tightens tracking, not the whole graf</span>
+    </div>
+
+    <p class="wm-lede widow-kill">
+      A widow is the short final line of a paragraph or heading left holding just one small word, orphaned below the rest of the text.
+      <strong>Widowmender</strong> catches it after layout, borrows a sliver of tracking from the line above so the word gets pulled back up,
+      and only reaches for a non&#8209;breaking space if tightening alone can't rescue it.
+    </p>
+
+    <section class="wm-section">
+      <div class="wm-section-head">
+        <span class="wm-num">01</span>
+        <h2 class="wm-h2">What a widow looks like</h2>
+      </div>
+      <p class="wm-section-desc">Hand-set here to show the failure mode plainly — a single word stranded on its own line, no different than the last-line "it" or "Apps" you're trying to catch.</p>
+
+      <div class="wm-illus">
+        <span class="wm-widow-line">Building in public changes how the work feels, even when the finished thing turns out the
+          <span class="wm-widow-word">same.<span class="wm-mark">
+            <svg width="46" height="20" viewBox="0 0 46 20" fill="none"><path d="M2 4 C 10 16, 30 16, 44 5" stroke="#B23A2E" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+          </span></span>
+        </span>
+        <div class="wm-illus-caption">Unmended — "same." left alone on its own line</div>
+      </div>
+    </section>
+
+    <section class="wm-section">
+      <div class="wm-section-head">
+        <span class="wm-num">02</span>
+        <h2 class="wm-h2">Drag the corner. Watch it get caught.</h2>
+      </div>
+      <p class="wm-section-desc">This paragraph is live — processed by Widowmender on load, on resize, and once webfonts settle. Narrow the box until a word strands itself on the last line, then keep dragging and watch the fix engage a beat later.</p>
+
+      <div class="wm-playground">
+        <div class="wm-playground-bar">
+          <span>widow-kill · paragraph</span>
+          <span class="wm-status" id="status-p"><span class="wm-status-dot"></span><span id="status-p-text">measuring…</span></span>
+        </div>
+        <div class="wm-resizer" id="resizer-p">
+          <p class="widow-kill">
+            Every paragraph eventually runs out of room, and the line that's left over doesn't always land cleanly.
+            Sometimes it's a single short word, stranded below a much longer line, looking like a mistake even though
+            nothing about the writing was wrong at all.
+          </p>
+        </div>
+        <div class="wm-drag-hint">Drag the <b>⌟</b> at the bottom-right corner of the text block above</div>
+      </div>
+    </section>
+
+    <section class="wm-section">
+      <div class="wm-section-head">
+        <span class="wm-num">03</span>
+        <h2 class="wm-h2">Headings widow too</h2>
+      </div>
+      <p class="wm-section-desc">Same script, same selector — no special-casing for headline type.</p>
+
+      <div class="wm-playground">
+        <div class="wm-playground-bar">
+          <span>widow-kill · heading</span>
+          <span class="wm-status" id="status-h"><span class="wm-status-dot"></span><span id="status-h-text">measuring…</span></span>
+        </div>
+        <div class="wm-resizer" id="resizer-h" style="width:260px;">
+          <h3 class="widow-kill">Websites and web apps for your business</h3>
+        </div>
+        <div class="wm-drag-hint">Drag the <b>⌟</b> corner here too</div>
+      </div>
+    </section>
+
+    <section class="wm-section">
+      <div class="wm-section-head">
+        <span class="wm-num">04</span>
+        <h2 class="wm-h2">Drop it in</h2>
+      </div>
+      <p class="wm-section-desc">Add the class to anything you want protected, then call init once. No build step.</p>
+      <div class="wm-code">&lt;p <span class="c2">class</span>=<span class="c1">"widow-kill"</span>&gt;…&lt;/p&gt;
+&lt;<span class="c3">script</span> <span class="c2">src</span>=<span class="c1">"widow-mender.js"</span>&gt;&lt;/<span class="c3">script</span>&gt;
+&lt;<span class="c3">script</span>&gt;Widowmender.<span class="c2">init</span>()&lt;/<span class="c3">script</span>&gt;</div>
+    </section>
+
+    <div class="wm-footer">
+      <span>Fixes: tighten tracking on the last two lines, then non&#8209;breaking space as fallback</span>
+      <span>widow-mender.js</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const DEFAULTS = { selector: '.widow-kill', minLastLineWords: 2, maxLetterSpacing: 0.06, step: 0.004 };
+  const originals = new WeakMap();
+
+  function isWordChar(part){ return part !== '' && !/^\s+$/.test(part); }
+
+  function wrapWords(el){
+    function walk(node){
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.nodeValue;
+        if (!text || !text.trim()) return;
+        const frag = document.createDocumentFragment();
+        text.split(/(\s+)/).forEach((part) => {
+          if (part === '') return;
+          if (isWordChar(part)) {
+            const span = document.createElement('span');
+            span.className = 'wk-word';
+            span.textContent = part;
+            frag.appendChild(span);
+          } else {
+            frag.appendChild(document.createTextNode(part));
+          }
+        });
+        node.parentNode.replaceChild(frag, node);
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.classList && node.classList.contains('wk-word')) return;
+        Array.from(node.childNodes).forEach(walk);
+      }
+    }
+    Array.from(el.childNodes).forEach(walk);
+  }
+
+  function getLines(el){
+    const words = el.querySelectorAll('.wk-word');
+    const lines = [];
+    let lastTop = null;
+    words.forEach((w) => {
+      const top = Math.round(w.getBoundingClientRect().top);
+      if (lastTop === null || Math.abs(top - lastTop) > 1) { lines.push([]); lastTop = top; }
+      lines[lines.length - 1].push(w);
+    });
+    return lines;
+  }
+
+  function processElement(el, opts){
+    if (!originals.has(el)) originals.set(el, el.innerHTML);
+    el.innerHTML = originals.get(el);
+    wrapWords(el);
+
+    let lines = getLines(el);
+    if (lines.length < 2) return { method: 'none', lastWords: lines[0] ? lines[0].length : 0 };
+
+    let last = lines[lines.length - 1];
+    if (last.length >= opts.minLastLineWords) return { method: 'none', lastWords: last.length };
+
+    const origLineCount = lines.length;
+    let method = null;
+
+    const targetWords = lines[lines.length - 2].concat(lines[lines.length - 1]);
+    const sameParent = targetWords.every((w) => w.parentNode === targetWords[0].parentNode);
+    let wrapper = null;
+
+    if (sameParent) {
+      try {
+        const range = document.createRange();
+        range.setStartBefore(targetWords[0]);
+        range.setEndAfter(targetWords[targetWords.length - 1]);
+        wrapper = document.createElement('span');
+        wrapper.className = 'wk-tighten';
+        range.surroundContents(wrapper);
+      } catch (e) { wrapper = null; }
+    }
+
+    let appliedSpacing = 0;
+    if (wrapper) {
+      let spacing = 0;
+      while (spacing < opts.maxLetterSpacing) {
+        spacing += opts.step;
+        wrapper.style.letterSpacing = `-${spacing.toFixed(3)}em`;
+        lines = getLines(el);
+        last = lines[lines.length - 1];
+        if (last.length >= opts.minLastLineWords || lines.length < origLineCount) {
+          method = 'tighten';
+          appliedSpacing = spacing;
+          wrapper.dataset.wkSpacing = `−${spacing.toFixed(3)}em`;
+          break;
+        }
+      }
+      if (!method) wrapper.style.letterSpacing = '';
+    }
+
+    if (!method) {
+      const words = Array.from(el.querySelectorAll('.wk-word'));
+      if (words.length >= 2) {
+        const lastW = words[words.length - 1];
+        const prevW = words[words.length - 2];
+        let node = prevW.nextSibling;
+        while (node && node !== lastW) {
+          if (node.nodeType === Node.TEXT_NODE) node.nodeValue = '\u00A0';
+          node = node.nextSibling;
+        }
+        method = 'nbsp';
+      }
+    }
+
+    lines = getLines(el);
+    return { method: method || 'none', lastWords: lines.length ? lines[lines.length - 1].length : 0, spacing: appliedSpacing };
+  }
+
+  function run(opts, onEach){
+    document.querySelectorAll(opts.selector).forEach((el) => {
+      const result = processElement(el, opts);
+      if (onEach) onEach(el, result);
+    });
+  }
+
+  const opts = Object.assign({}, DEFAULTS);
+
+  function setStatus(elId, textId, result){
+    const dot = document.getElementById(elId);
+    const text = document.getElementById(textId);
+    if (!dot || !text) return;
+    dot.classList.remove('is-fixed', 'is-clean');
+    if (result.method === 'tighten') {
+      dot.classList.add('is-fixed');
+      text.textContent = `mended · tightened ${(-result.spacing).toFixed(3)}em`;
+    } else if (result.method === 'nbsp') {
+      dot.classList.add('is-fixed');
+      text.textContent = 'mended · joined with nbsp';
+    } else {
+      dot.classList.add('is-clean');
+      text.textContent = `no widow · last line ${result.lastWords} words`;
+    }
+  }
+
+  function runAll(){
+    run(opts, (el, result) => {
+      if (resizerP.contains(el)) setStatus('status-p', 'status-p-text', result);
+      if (resizerH.contains(el)) setStatus('status-h', 'status-h-text', result);
+    });
+  }
+
+  const resizerP = document.getElementById('resizer-p');
+  const resizerH = document.getElementById('resizer-h');
+
+  let debounce;
+  function scheduleRun(){ clearTimeout(debounce); debounce = setTimeout(runAll, 90); }
+
+  runAll();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(runAll);
+
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(scheduleRun);
+    ro.observe(resizerP);
+    ro.observe(resizerH);
+  }
+  window.addEventListener('resize', scheduleRun);
+})();
+</script>
