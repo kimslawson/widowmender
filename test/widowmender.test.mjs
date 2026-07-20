@@ -302,6 +302,32 @@ await test('nbsp fallback stands down instead of overflowing a too-narrow measur
   await page.close();
 });
 
+await test('a non-positive step cannot spin the tightening loop forever', async () => {
+  const page = await newFixturePage();
+  try {
+    const width = await page.evaluate(() => window.findWidthFor(document.getElementById('p'), 1));
+    assert.ok(width, 'no natural widow found');
+    await page.evaluate((w) => (document.getElementById('p').style.width = w + 'px'), width);
+
+    // Without the guard, step: 0 makes `spacing += step` stand still and the
+    // tighten loop never exits. Race the run against a timeout so a regression
+    // fails in a few seconds instead of hanging the whole suite.
+    const run = initAndSettle(page, '.widow', { step: 0 }).then(() =>
+      page.evaluate(() => window.__results[window.__results.length - 1])
+    );
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('step: 0 did not return within 5s (loop likely unguarded)')), 5000)
+    );
+    const result = await Promise.race([run, timeout]);
+    assert.ok(
+      ['tighten', 'nbsp'].includes(result.method),
+      `step: 0 should still mend via the default step, got "${result.method}"`
+    );
+  } finally {
+    await page.close().catch(() => {});
+  }
+});
+
 await test('preserves inline markup (em, strong, a) while wrapping words', async () => {
   const page = await newFixturePage(`
     <style>body{ margin: 0; font: 16px/1.5 Georgia, serif; }</style>

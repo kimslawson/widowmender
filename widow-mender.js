@@ -15,7 +15,7 @@
  *   Widowmender.init('.widow', {
  *     minLastLineWords: 2,    // a last line with fewer words than this counts as a widow
  *     maxLetterSpacing: 0.06, // em; ceiling on how far tracking will tighten before giving up
- *     step: 0.004,            // em; how finely to walk the tightening loop
+ *     step: 0.004,            // em; how finely to walk the tightening loop (must be > 0)
  *     onProcess: null,        // optional callback(element, result) fired after each element
  *   });
  *
@@ -190,6 +190,12 @@
 
   function init(selector, options) {
     const opts = Object.assign({}, DEFAULTS, { selector: selector || DEFAULTS.selector }, options || {});
+
+    // A non-positive or non-numeric step can never advance the tightening loop
+    // (spacing += step would never grow), so the `while (spacing < max)` walk
+    // would spin forever. Fall back to the default so no caller can hang the
+    // page with step: 0.
+    if (!(opts.step > 0)) opts.step = DEFAULTS.step;
 
     // State is scoped per init() call so multiple instances don't clobber
     // each other's element lists, observers, or debounce timers.
