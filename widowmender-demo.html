@@ -1,4 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Widowmender</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
 
 <style>
@@ -16,6 +24,8 @@
   }
 
   *{ box-sizing: border-box; }
+
+  body{ margin: 0; }
 
   .wm-root{
     background: var(--paper);
@@ -68,13 +78,15 @@
   .wm-h2{ font-size: 20px; font-weight: 700; margin: 0; }
   .wm-section-desc{ font-size: 14.5px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.55; }
 
-  /* Illustration panel: hand-set widow example */
+  /* Illustration panel: hand-set widow example. The line breaks are hard-coded
+     so "same." is guaranteed to sit alone on the last line at any width. */
   .wm-illus{
     background: var(--paper-alt); border: 1px solid var(--rule); border-radius: 3px;
-    padding: 22px 24px; font-size: 17px; line-height: 1.6; max-width: 360px;
+    padding: 22px 24px; font-size: 17px; line-height: 1.6;
+    width: max-content; max-width: 100%;
     position: relative;
   }
-  .wm-illus .wm-widow-line{ position: relative; display:inline; }
+  .wm-illus-text{ margin: 0; }
   .wm-illus .wm-widow-word{ position: relative; }
   .wm-mark{
     position:absolute; left:-2px; top: 100%;
@@ -147,8 +159,11 @@
   @media (max-width: 480px){
     .wm-title{ font-size: 34px; }
     .wm-shell{ padding: 28px 16px 40px; }
+    .wm-illus{ font-size: 14.5px; padding: 16px 18px; }
   }
 </style>
+</head>
+<body>
 
 <div class="wm-root">
   <div class="wm-shell">
@@ -156,14 +171,14 @@
     <div class="wm-masthead">
       <p class="wm-kicker">A small JS enhancement</p>
       <h1 class="wm-title">Widowmender</h1>
-      <p class="wm-sub">The opposite of a widowmaker — it reunites the last word with its line.</p>
+      <p class="wm-sub">The opposite of a widowmaker: it reunites the last word with its line.</p>
     </div>
     <div class="wm-meta">
-      <span>Vol. 1 · No. widows</span>
+      <span>Vol. 1 &middot; No. widows</span>
       <span>Tightens tracking, not the whole graf</span>
     </div>
 
-    <p class="wm-lede widow-kill">
+    <p class="wm-lede widow">
       A widow is the short final line of a paragraph or heading left holding just one small word, orphaned below the rest of the text.
       <strong>Widowmender</strong> catches it after layout, borrows a sliver of tracking from the line above so the word gets pulled back up,
       and only reaches for a non&#8209;breaking space if tightening alone can't rescue it.
@@ -174,15 +189,16 @@
         <span class="wm-num">01</span>
         <h2 class="wm-h2">What a widow looks like</h2>
       </div>
-      <p class="wm-section-desc">Hand-set here to show the failure mode plainly — a single word stranded on its own line, no different than the last-line "it" or "Apps" you're trying to catch.</p>
+      <p class="wm-section-desc">Hand-set here to show the failure mode plainly: a single word stranded on its own line, dangling below the rest of its paragraph.</p>
 
       <div class="wm-illus">
-        <span class="wm-widow-line">Building in public changes how the work feels, even when the finished thing turns out the
-          <span class="wm-widow-word">same.<span class="wm-mark">
+        <p class="wm-illus-text">Building in public changes how the<br>
+work feels, even when the finished<br>
+thing always turns out exactly the<br>
+<span class="wm-widow-word">same.<span class="wm-mark">
             <svg width="46" height="20" viewBox="0 0 46 20" fill="none"><path d="M2 4 C 10 16, 30 16, 44 5" stroke="#B23A2E" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
-          </span></span>
-        </span>
-        <div class="wm-illus-caption">Unmended — "same." left alone on its own line</div>
+          </span></span></p>
+        <div class="wm-illus-caption">Unmended: "same." left alone on its own line</div>
       </div>
     </section>
 
@@ -191,21 +207,21 @@
         <span class="wm-num">02</span>
         <h2 class="wm-h2">Drag the corner. Watch it get caught.</h2>
       </div>
-      <p class="wm-section-desc">This paragraph is live — processed by Widowmender on load, on resize, and once webfonts settle. Narrow the box until a word strands itself on the last line, then keep dragging and watch the fix engage a beat later.</p>
+      <p class="wm-section-desc">This paragraph is live: processed by Widowmender on load, on resize, and once webfonts settle. Narrow the box until a word strands itself on the last line, then keep dragging and watch the fix engage a beat later.</p>
 
       <div class="wm-playground">
         <div class="wm-playground-bar">
-          <span>widow-kill · paragraph</span>
-          <span class="wm-status" id="status-p"><span class="wm-status-dot"></span><span id="status-p-text">measuring…</span></span>
+          <span>widow &middot; paragraph</span>
+          <span class="wm-status" id="status-p"><span class="wm-status-dot"></span><span id="status-p-text">measuring...</span></span>
         </div>
         <div class="wm-resizer" id="resizer-p">
-          <p class="widow-kill">
+          <p class="widow">
             Every paragraph eventually runs out of room, and the line that's left over doesn't always land cleanly.
             Sometimes it's a single short word, stranded below a much longer line, looking like a mistake even though
             nothing about the writing was wrong at all.
           </p>
         </div>
-        <div class="wm-drag-hint">Drag the <b>⌟</b> at the bottom-right corner of the text block above</div>
+        <div class="wm-drag-hint">Drag the <b>resize handle</b> at the bottom-right corner of the text block above</div>
       </div>
     </section>
 
@@ -214,17 +230,17 @@
         <span class="wm-num">03</span>
         <h2 class="wm-h2">Headings widow too</h2>
       </div>
-      <p class="wm-section-desc">Same script, same selector — no special-casing for headline type.</p>
+      <p class="wm-section-desc">Same script, same selector: no special-casing for headline type.</p>
 
       <div class="wm-playground">
         <div class="wm-playground-bar">
-          <span>widow-kill · heading</span>
-          <span class="wm-status" id="status-h"><span class="wm-status-dot"></span><span id="status-h-text">measuring…</span></span>
+          <span>widow &middot; heading</span>
+          <span class="wm-status" id="status-h"><span class="wm-status-dot"></span><span id="status-h-text">measuring...</span></span>
         </div>
         <div class="wm-resizer" id="resizer-h" style="width:260px;">
-          <h3 class="widow-kill">Websites and web apps for your business</h3>
+          <h3 class="widow">Websites and web apps for your business</h3>
         </div>
-        <div class="wm-drag-hint">Drag the <b>⌟</b> corner here too</div>
+        <div class="wm-drag-hint">Drag the <b>resize handle</b> at this one's corner too</div>
       </div>
     </section>
 
@@ -234,7 +250,7 @@
         <h2 class="wm-h2">Drop it in</h2>
       </div>
       <p class="wm-section-desc">Add the class to anything you want protected, then call init once. No build step.</p>
-      <div class="wm-code">&lt;p <span class="c2">class</span>=<span class="c1">"widow-kill"</span>&gt;…&lt;/p&gt;
+      <div class="wm-code">&lt;p <span class="c2">class</span>=<span class="c1">"widow"</span>&gt;...&lt;/p&gt;
 &lt;<span class="c3">script</span> <span class="c2">src</span>=<span class="c1">"widow-mender.js"</span>&gt;&lt;/<span class="c3">script</span>&gt;
 &lt;<span class="c3">script</span>&gt;Widowmender.<span class="c2">init</span>()&lt;/<span class="c3">script</span>&gt;</div>
     </section>
@@ -246,164 +262,38 @@
   </div>
 </div>
 
+<script src="widow-mender.js"></script>
 <script>
-(function(){
+(function () {
   'use strict';
-  const DEFAULTS = { selector: '.widow-kill', minLastLineWords: 2, maxLetterSpacing: 0.06, step: 0.004 };
-  const originals = new WeakMap();
 
-  function isWordChar(part){ return part !== '' && !/^\s+$/.test(part); }
+  var resizerP = document.getElementById('resizer-p');
+  var resizerH = document.getElementById('resizer-h');
 
-  function wrapWords(el){
-    function walk(node){
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.nodeValue;
-        if (!text || !text.trim()) return;
-        const frag = document.createDocumentFragment();
-        text.split(/(\s+)/).forEach((part) => {
-          if (part === '') return;
-          if (isWordChar(part)) {
-            const span = document.createElement('span');
-            span.className = 'wk-word';
-            span.textContent = part;
-            frag.appendChild(span);
-          } else {
-            frag.appendChild(document.createTextNode(part));
-          }
-        });
-        node.parentNode.replaceChild(frag, node);
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        if (node.classList && node.classList.contains('wk-word')) return;
-        Array.from(node.childNodes).forEach(walk);
-      }
-    }
-    Array.from(el.childNodes).forEach(walk);
-  }
-
-  function getLines(el){
-    const words = el.querySelectorAll('.wk-word');
-    const lines = [];
-    let lastTop = null;
-    words.forEach((w) => {
-      const top = Math.round(w.getBoundingClientRect().top);
-      if (lastTop === null || Math.abs(top - lastTop) > 1) { lines.push([]); lastTop = top; }
-      lines[lines.length - 1].push(w);
-    });
-    return lines;
-  }
-
-  function processElement(el, opts){
-    if (!originals.has(el)) originals.set(el, el.innerHTML);
-    el.innerHTML = originals.get(el);
-    wrapWords(el);
-
-    let lines = getLines(el);
-    if (lines.length < 2) return { method: 'none', lastWords: lines[0] ? lines[0].length : 0 };
-
-    let last = lines[lines.length - 1];
-    if (last.length >= opts.minLastLineWords) return { method: 'none', lastWords: last.length };
-
-    const origLineCount = lines.length;
-    let method = null;
-
-    const targetWords = lines[lines.length - 2].concat(lines[lines.length - 1]);
-    const sameParent = targetWords.every((w) => w.parentNode === targetWords[0].parentNode);
-    let wrapper = null;
-
-    if (sameParent) {
-      try {
-        const range = document.createRange();
-        range.setStartBefore(targetWords[0]);
-        range.setEndAfter(targetWords[targetWords.length - 1]);
-        wrapper = document.createElement('span');
-        wrapper.className = 'wk-tighten';
-        range.surroundContents(wrapper);
-      } catch (e) { wrapper = null; }
-    }
-
-    let appliedSpacing = 0;
-    if (wrapper) {
-      let spacing = 0;
-      while (spacing < opts.maxLetterSpacing) {
-        spacing += opts.step;
-        wrapper.style.letterSpacing = `-${spacing.toFixed(3)}em`;
-        lines = getLines(el);
-        last = lines[lines.length - 1];
-        if (last.length >= opts.minLastLineWords || lines.length < origLineCount) {
-          method = 'tighten';
-          appliedSpacing = spacing;
-          wrapper.dataset.wkSpacing = `−${spacing.toFixed(3)}em`;
-          break;
-        }
-      }
-      if (!method) wrapper.style.letterSpacing = '';
-    }
-
-    if (!method) {
-      const words = Array.from(el.querySelectorAll('.wk-word'));
-      if (words.length >= 2) {
-        const lastW = words[words.length - 1];
-        const prevW = words[words.length - 2];
-        let node = prevW.nextSibling;
-        while (node && node !== lastW) {
-          if (node.nodeType === Node.TEXT_NODE) node.nodeValue = '\u00A0';
-          node = node.nextSibling;
-        }
-        method = 'nbsp';
-      }
-    }
-
-    lines = getLines(el);
-    return { method: method || 'none', lastWords: lines.length ? lines[lines.length - 1].length : 0, spacing: appliedSpacing };
-  }
-
-  function run(opts, onEach){
-    document.querySelectorAll(opts.selector).forEach((el) => {
-      const result = processElement(el, opts);
-      if (onEach) onEach(el, result);
-    });
-  }
-
-  const opts = Object.assign({}, DEFAULTS);
-
-  function setStatus(elId, textId, result){
-    const dot = document.getElementById(elId);
-    const text = document.getElementById(textId);
-    if (!dot || !text) return;
-    dot.classList.remove('is-fixed', 'is-clean');
+  function setStatus(statusId, textId, result) {
+    var status = document.getElementById(statusId);
+    var text = document.getElementById(textId);
+    if (!status || !text) return;
+    status.classList.remove('is-fixed', 'is-clean');
     if (result.method === 'tighten') {
-      dot.classList.add('is-fixed');
-      text.textContent = `mended · tightened ${(-result.spacing).toFixed(3)}em`;
+      status.classList.add('is-fixed');
+      text.textContent = 'mended: tightened -' + result.spacing.toFixed(3) + 'em';
     } else if (result.method === 'nbsp') {
-      dot.classList.add('is-fixed');
-      text.textContent = 'mended · joined with nbsp';
+      status.classList.add('is-fixed');
+      text.textContent = 'mended: joined with nbsp';
     } else {
-      dot.classList.add('is-clean');
-      text.textContent = `no widow · last line ${result.lastWords} words`;
+      status.classList.add('is-clean');
+      text.textContent = 'no widow: last line ' + result.lastWords + (result.lastWords === 1 ? ' word' : ' words');
     }
   }
 
-  function runAll(){
-    run(opts, (el, result) => {
-      if (resizerP.contains(el)) setStatus('status-p', 'status-p-text', result);
-      if (resizerH.contains(el)) setStatus('status-h', 'status-h-text', result);
-    });
-  }
-
-  const resizerP = document.getElementById('resizer-p');
-  const resizerH = document.getElementById('resizer-h');
-
-  let debounce;
-  function scheduleRun(){ clearTimeout(debounce); debounce = setTimeout(runAll, 90); }
-
-  runAll();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(runAll);
-
-  if ('ResizeObserver' in window) {
-    const ro = new ResizeObserver(scheduleRun);
-    ro.observe(resizerP);
-    ro.observe(resizerH);
-  }
-  window.addEventListener('resize', scheduleRun);
+  Widowmender.init('.widow', {
+    onProcess: function (el, result) {
+      if (resizerP && resizerP.contains(el)) setStatus('status-p', 'status-p-text', result);
+      if (resizerH && resizerH.contains(el)) setStatus('status-h', 'status-h-text', result);
+    }
+  });
 })();
 </script>
+</body>
+</html>
