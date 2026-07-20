@@ -222,10 +222,43 @@ await test('treats minLastLineWords as the widow threshold', async () => {
   assert.equal(result.method, 'none', 'a 2-word last line is not a widow by default');
   await page.evaluate(() => window.__wm.destroy());
 
-  // Raised threshold (3): the same layout now counts as a widow.
+  // Raised threshold (3): the same layout now counts as a widow, and the fix
+  // must GENUINELY resolve it — the last line has to end up with >= 3 words,
+  // not merely report a method. (Reporting without checking the outcome is
+  // exactly how a no-op fallback once passed for a fix.)
   await initAndSettle(page, '.widow', { minLastLineWords: 3 });
   result = await page.evaluate(() => window.__results[window.__results.length - 1]);
   assert.ok(['tighten', 'nbsp'].includes(result.method), `expected a fix at threshold 3, got "${result.method}"`);
+  const after = await page.evaluate(() => window.measure(document.getElementById('p')));
+  assert.ok(
+    after.last.length >= 3,
+    `raised threshold should leave >= 3 words on the last line, got ${after.last.length} ("${after.last.join(' ')}")`
+  );
+  await page.close();
+});
+
+await test('nbsp fallback binds enough of the tail to satisfy a raised threshold', async () => {
+  // Long measure + tightening disabled forces the guaranteed nbsp path for a
+  // multi-word widow. The fallback must bind the last N words (N = threshold)
+  // so a 2-word last line under threshold 3 becomes a >= 3-word tail, rather
+  // than gluing two already-adjacent words and only claiming success.
+  const page = await newFixturePage();
+  const width = await page.evaluate(() => window.findWidthFor(document.getElementById('p'), 2));
+  assert.ok(width, 'no width in range produced a 2-word last line');
+  await page.evaluate((w) => (document.getElementById('p').style.width = w + 'px'), width);
+
+  await initAndSettle(page, '.widow', { minLastLineWords: 3, maxLetterSpacing: 0 });
+  const result = await page.evaluate(() => window.__results[window.__results.length - 1]);
+  assert.equal(result.method, 'nbsp', 'tightening is disabled, so the fallback must fire');
+  const state = await page.evaluate(() => ({
+    hasNbsp: document.getElementById('p').textContent.includes(' '),
+    after: window.measure(document.getElementById('p')),
+  }));
+  assert.ok(state.hasNbsp, 'the tail should be joined with non-breaking spaces');
+  assert.ok(
+    state.after.last.length >= 3,
+    `nbsp fallback must leave >= 3 words on the last line, got ${state.after.last.length} ("${state.after.last.join(' ')}")`
+  );
   await page.close();
 });
 

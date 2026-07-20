@@ -144,17 +144,22 @@
     }
 
     if (!method) {
-      // Guaranteed fallback: glue the last two words with a non-breaking
-      // space. They'll either both fit on the prior line, or wrap down
-      // together; either way the widow can never be a lone word again.
+      // Guaranteed fallback: glue the tail together with non-breaking spaces
+      // so it can't settle as a too-short last line. We bind the last N words,
+      // where N is the widow threshold. For the default threshold of 2 this is
+      // the classic "join the last two words" trick; for a higher threshold it
+      // binds proportionally more, so the unbreakable tail is at least N words
+      // long and the last line can never come to rest below N. (On a short
+      // measure that tail may be wider than ideal \u2014 the price of a guarantee.)
       const words = Array.from(el.querySelectorAll('.wm-word'));
       if (words.length >= 2) {
-        const lastW = words[words.length - 1];
-        const prevW = words[words.length - 2];
-        let node = prevW.nextSibling;
-        while (node && node !== lastW) {
-          if (node.nodeType === Node.TEXT_NODE) node.nodeValue = '\u00A0';
-          node = node.nextSibling;
+        const bind = Math.min(words.length, Math.max(2, opts.minLastLineWords));
+        for (let i = words.length - bind; i < words.length - 1; i++) {
+          let node = words[i].nextSibling;
+          while (node && node !== words[i + 1]) {
+            if (node.nodeType === Node.TEXT_NODE) node.nodeValue = '\u00A0';
+            node = node.nextSibling;
+          }
         }
         method = 'nbsp';
       }
