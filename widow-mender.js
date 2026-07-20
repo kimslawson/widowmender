@@ -1,10 +1,10 @@
 /*!
- * Widowmender — kills typographic widows by nudging tracking (letter-spacing)
+ * Widowmender: kills typographic widows by nudging tracking (letter-spacing)
  * on just the tail of a paragraph, falling back to a non-breaking space join
  * when tightening alone can't rescue the orphaned word.
  *
  * Usage:
- *   <p class="widow-kill">Your paragraph…</p>
+ *   <p class="widow">Your paragraph...</p>
  *   <script src="widow-mender.js"></script>
  *   <script>Widowmender.init();</script>
  *
@@ -12,34 +12,36 @@
  *   Widowmender.init('.article p, .article h1, .article h2');
  *
  * Options:
- *   Widowmender.init('.widow-kill', {
- *     minLastLineWords: 2,   // a last line with fewer words than this counts as a widow
- *     maxLetterSpacing: 0.06, // em — ceiling on how far tracking will tighten before giving up
- *     step: 0.004              // em — how finely to walk the tightening loop
+ *   Widowmender.init('.widow', {
+ *     minLastLineWords: 2,    // a last line with fewer words than this counts as a widow
+ *     maxLetterSpacing: 0.06, // em; ceiling on how far tracking will tighten before giving up
+ *     step: 0.004,            // em; how finely to walk the tightening loop
+ *     onProcess: null,        // optional callback(element, result) fired after each element
  *   });
+ *
+ * The result passed to onProcess looks like:
+ *   { method: 'none' | 'tighten' | 'nbsp', lastWords: <number>, spacing: <em number> }
  */
 (function (global) {
   'use strict';
 
   const DEFAULTS = {
-    selector: '.widow-kill',
+    selector: '.widow',
     minLastLineWords: 2,
     maxLetterSpacing: 0.06,
     step: 0.004,
+    onProcess: null,
   };
 
   // element -> original innerHTML, so we can cleanly re-run on resize/font-load
   const originals = new WeakMap();
-  let controlled = [];
-  let resizeObserver = null;
-  let debounceTimer = null;
 
   function isWordChar(part) {
     return part !== '' && !/^\s+$/.test(part);
   }
 
   // Wrap each run of non-whitespace text in a <span class="wk-word">,
-  // walking the DOM so existing inline markup (em, a, strong…) is preserved.
+  // walking the DOM so existing inline markup (em, a, strong, ...) is preserved.
   function wrapWords(el) {
     function walk(node) {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -88,13 +90,20 @@
 
     wrapWords(el);
     let lines = getLines(el);
-    if (lines.length < 2) return { method: 'none' }; // nothing to fix on a single line
+    if (lines.length < 2) {
+      // nothing to fix on a single line
+      return { method: 'none', lastWords: lines.length ? lines[0].length : 0, spacing: 0 };
+    }
 
     let last = lines[lines.length - 1];
-    if (last.length >= opts.minLastLineWords) return { method: 'none' }; // no widow
+    if (last.length >= opts.minLastLineWords) {
+      // no widow
+      return { method: 'none', lastWords: last.length, spacing: 0 };
+    }
 
     const origLineCount = lines.length;
     let method = null;
+    let appliedSpacing = 0;
 
     // Only the tail matters: tightening the last line's own spacing can't
     // pull a word up, since the last line already fits by definition. What
@@ -126,6 +135,7 @@
         last = lines[lines.length - 1];
         if (last.length >= opts.minLastLineWords || lines.length < origLineCount) {
           method = 'tighten';
+          appliedSpacing = spacing;
           wrapper.dataset.wkSpacing = wrapper.style.letterSpacing;
           break;
         }
@@ -136,7 +146,7 @@
     if (!method) {
       // Guaranteed fallback: glue the last two words with a non-breaking
       // space. They'll either both fit on the prior line, or wrap down
-      // together — either way the widow can never be a lone word again.
+      // together; either way the widow can never be a lone word again.
       const words = Array.from(el.querySelectorAll('.wk-word'));
       if (words.length >= 2) {
         const lastW = words[words.length - 1];
@@ -150,31 +160,49 @@
       }
     }
 
-    return { method };
-  }
-
-  function run(opts) {
-    const els = Array.from(document.querySelectorAll(opts.selector));
-    controlled = els;
-    els.forEach((el) => processElement(el, opts));
-  }
-
-  function debouncedRun(opts) {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => run(opts), 120);
+    lines = getLines(el);
+    return {
+      method: method || 'none',
+      lastWords: lines.length ? lines[lines.length - 1].length : 0,
+      spacing: appliedSpacing,
+    };
   }
 
   function init(selector, options) {
     const opts = Object.assign({}, DEFAULTS, { selector: selector || DEFAULTS.selector }, options || {});
 
+    // State is scoped per init() call so multiple instances don't clobber
+    // each other's element lists, observers, or debounce timers.
+    let controlled = [];
+    let resizeObserver = null;
+    let debounceTimer = null;
+    let destroyed = false;
+
+    function run() {
+      if (destroyed) return;
+      controlled = Array.from(document.querySelectorAll(opts.selector));
+      controlled.forEach((el) => {
+        const result = processElement(el, opts);
+        if (typeof opts.onProcess === 'function') opts.onProcess(el, result);
+      });
+    }
+
+    function debouncedRun() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(run, 120);
+    }
+
     const start = () => {
-      run(opts);
-      window.addEventListener('resize', () => debouncedRun(opts));
+      if (destroyed) return;
+      run();
+      window.addEventListener('resize', debouncedRun);
       if ('fonts' in document) {
-        document.fonts.ready.then(() => run(opts));
+        document.fonts.ready.then(() => {
+          if (!destroyed) run();
+        });
       }
       if ('ResizeObserver' in window) {
-        resizeObserver = new ResizeObserver(() => debouncedRun(opts));
+        resizeObserver = new ResizeObserver(debouncedRun);
         controlled.forEach((el) => resizeObserver.observe(el.parentElement || el));
       }
     };
@@ -186,13 +214,15 @@
     }
 
     return {
-      refresh: () => run(opts),
+      refresh: run,
       destroy: () => {
+        destroyed = true;
+        clearTimeout(debounceTimer);
+        window.removeEventListener('resize', debouncedRun);
+        if (resizeObserver) resizeObserver.disconnect();
         controlled.forEach((el) => {
           if (originals.has(el)) el.innerHTML = originals.get(el);
         });
-        if (resizeObserver) resizeObserver.disconnect();
-        window.removeEventListener('resize', debouncedRun);
       },
     };
   }
