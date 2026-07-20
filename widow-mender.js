@@ -20,7 +20,10 @@
  *   });
  *
  * The result passed to onProcess looks like:
- *   { method: 'none' | 'tighten' | 'nbsp', lastWords: <number>, spacing: <em number> }
+ *   { method: 'none' | 'tighten' | 'nbsp' | 'skip', lastWords: <number>, spacing: <em number> }
+ * where 'none' means no widow was present, 'tighten'/'nbsp' are the two fixes,
+ * and 'skip' means a widow was found but deliberately left unmended because
+ * binding its tail would have overflowed the container (too narrow a measure).
  */
 (function (global) {
   'use strict';
@@ -144,24 +147,36 @@
     }
 
     if (!method) {
-      // Guaranteed fallback: glue the tail together with non-breaking spaces
-      // so it can't settle as a too-short last line. We bind the last N words,
-      // where N is the widow threshold. For the default threshold of 2 this is
-      // the classic "join the last two words" trick; for a higher threshold it
+      // Blunt fallback: glue the tail together with non-breaking spaces so it
+      // can't settle as a too-short last line. We bind the last N words, where
+      // N is the widow threshold. For the default threshold of 2 this is the
+      // classic "join the last two words" trick; for a higher threshold it
       // binds proportionally more, so the unbreakable tail is at least N words
-      // long and the last line can never come to rest below N. (On a short
-      // measure that tail may be wider than ideal \u2014 the price of a guarantee.)
+      // long and the last line can never come to rest below N.
       const words = Array.from(el.querySelectorAll('.wm-word'));
       if (words.length >= 2) {
         const bind = Math.min(words.length, Math.max(2, opts.minLastLineWords));
+        const touched = [];
         for (let i = words.length - bind; i < words.length - 1; i++) {
           let node = words[i].nextSibling;
           while (node && node !== words[i + 1]) {
-            if (node.nodeType === Node.TEXT_NODE) node.nodeValue = '\u00A0';
+            if (node.nodeType === Node.TEXT_NODE) {
+              touched.push({ node, text: node.nodeValue });
+              node.nodeValue = '\u00A0';
+            }
             node = node.nextSibling;
           }
         }
-        method = 'nbsp';
+        // Binding makes that run unbreakable, which on a narrow measure can be
+        // wider than the line box. Better to leave a widow than to shove the
+        // page into horizontal overflow, so if the join would overflow the
+        // element we undo it and report that we deliberately stood down.
+        if (el.scrollWidth > el.clientWidth + 1) {
+          touched.forEach((t) => (t.node.nodeValue = t.text));
+          method = 'skip';
+        } else {
+          method = 'nbsp';
+        }
       }
     }
 

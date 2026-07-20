@@ -262,6 +262,46 @@ await test('nbsp fallback binds enough of the tail to satisfy a raised threshold
   await page.close();
 });
 
+await test('nbsp fallback stands down instead of overflowing a too-narrow measure', async () => {
+  // Container width set between the widest single word and the last-two-words
+  // joined: single words fit, but binding the tail would overflow. The library
+  // must undo the join and report 'skip' rather than force horizontal overflow.
+  const page = await newFixturePage(`
+    <style>body{ margin: 0; font: 16px/1.5 Georgia, serif; }</style>
+    <p id="p" class="widow">Consider the typography typically typeset plainly typography</p>
+  `);
+  const width = await page.evaluate(() => {
+    const el = document.getElementById('p');
+    const words = el.textContent.trim().split(/\s+/);
+    const orig = el.innerHTML;
+    el.textContent = '';
+    const probe = document.createElement('span');
+    probe.style.whiteSpace = 'nowrap';
+    el.appendChild(probe);
+    const w = (s) => { probe.textContent = s; return probe.getBoundingClientRect().width; };
+    const joined = w(words.slice(-2).join(' '));
+    let widest = 0;
+    for (const word of words) widest = Math.max(widest, w(word));
+    el.innerHTML = orig;
+    return Math.round((widest + joined) / 2); // fits single words, not the bound pair
+  });
+  await page.evaluate((wpx) => (document.getElementById('p').style.width = wpx + 'px'), width);
+
+  await initAndSettle(page, '.widow', { maxLetterSpacing: 0 });
+  const result = await page.evaluate(() => window.__results[window.__results.length - 1]);
+  assert.equal(result.method, 'skip', 'a tail too wide to bind must stand down, not overflow');
+  const state = await page.evaluate(() => {
+    const el = document.getElementById('p');
+    return {
+      hasNbsp: el.textContent.includes(' '),
+      overflow: el.scrollWidth > el.clientWidth + 1,
+    };
+  });
+  assert.equal(state.hasNbsp, false, 'standing down must revert every nbsp join');
+  assert.equal(state.overflow, false, 'standing down must leave the element free of overflow');
+  await page.close();
+});
+
 await test('preserves inline markup (em, strong, a) while wrapping words', async () => {
   const page = await newFixturePage(`
     <style>body{ margin: 0; font: 16px/1.5 Georgia, serif; }</style>

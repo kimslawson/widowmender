@@ -281,6 +281,9 @@ thing always turns out exactly the<br>
     } else if (result.method === 'nbsp') {
       status.classList.add('is-fixed');
       text.textContent = 'mended: joined with nbsp';
+    } else if (result.method === 'skip') {
+      // Neither class: a neutral dot for "widow present, deliberately left".
+      text.textContent = 'widow left: tail too wide to join';
     } else {
       status.classList.add('is-clean');
       text.textContent = 'no widow: last line ' + result.lastWords + (result.lastWords === 1 ? ' word' : ' words');

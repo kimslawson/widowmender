@@ -42,7 +42,9 @@ Widowmender ships with sensible defaults baked in, but feel free to tweak the (f
 
 4. `step: 0.004`
 
-5. `onProcess: null` (optional callback, called as `onProcess(element, result)` after each element is processed; `result.method` is one of `'none'`, `'tighten'`, or `'nbsp'`)
+5. `onProcess: null` (optional callback, called as `onProcess(element, result)` after each element is processed; `result.method` is one of `'none'` (no widow), `'tighten'`, `'nbsp'`, or `'skip'`)
+
+On a measure too narrow to bind the tail without overflowing the container, the non-breaking-space fallback stands down rather than break the layout: it leaves the widow in place and reports `method: 'skip'`.
 
 ## Tests
 
