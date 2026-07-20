@@ -6,7 +6,7 @@ Javascript implementation of a newspaper production hack to tidy up rogue lines 
 
 In the world of typography, those short lines at the end of an otherwise fine-looking paragraph are called “widows”. These:
 
-![](/Users/kim/Downloads/files%20(1)/lorax.gif)
+![Animation showing a widow at the end of a paragraph being mended](lorax.gif)
 
 So, to make a long story short, this little bit of JavaScript fixes widows on your website. It can be applied in a few different ways to suit your needs and it has some options to suit your fancy.
 
@@ -18,7 +18,7 @@ To make a short story longer, I was once a designer for a local newspaper. One o
 
 Those days may be gone, and my fingers may not recall the keystrokes to fix widows in InDesign, but they’re still there on the web and I still want to mend them. I made this tiny JavaScript library to do just that, and I'd like to share it with you. Also here's a picture of a duck whose name is Marshmallow, not Quackers.
 
-<img title="" src="file:///Users/kim/Downloads/files%20(1)/marshmallow.jpg" alt="" data-align="inline" width="260">
+<img title="" src="marshmallow.jpg" alt="A duck named Marshmallow" data-align="inline" width="260">
 
 ## Recipe
 
@@ -41,5 +41,16 @@ Widowmender ships with sensible defaults baked in, but feel free to tweak the (f
 3. `maxLetterSpacing: 0.06`
 
 4. `step: 0.004`
+
+5. `onProcess: null` (optional callback, called as `onProcess(element, result)` after each element is processed; `result.method` is one of `'none'`, `'tighten'`, or `'nbsp'`)
+
+## Tests
+
+There's a small Playwright-driven test suite that exercises the library in a real browser:
+
+```
+npm install
+npm test
+```
 
 
