@@ -129,6 +129,13 @@
     border: 1px solid var(--rule); border-radius: 2px;
   }
   .wm-ctl input:focus{ outline: none; border-color: var(--brass); background: var(--paper); }
+  .wm-ctl select{
+    padding: 2px 4px;
+    font-family:'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--ink); background: var(--paper-alt);
+    border: 1px solid var(--rule); border-radius: 2px;
+  }
+  .wm-ctl select:focus{ outline: none; border-color: var(--brass); background: var(--paper); }
   .wm-controls-reset{
     margin-left:auto; cursor:pointer;
     font-family:'IBM Plex Mono', monospace; font-size: 9.5px; text-transform: uppercase; letter-spacing:.08em;
@@ -236,6 +243,7 @@ thing always turns out exactly the<br>
           <span class="wm-status" id="status-p"><span class="wm-status-dot"></span><span id="status-p-text">measuring...</span></span>
         </div>
         <div class="wm-controls" id="controls-p">
+          <label class="wm-ctl">strategy <select data-opt="strategy"><option value="local" selected>local</option><option value="minimal">minimal</option><option value="even">even</option></select></label>
           <label class="wm-ctl">minLastLineWords <input type="number" data-opt="minLastLineWords" value="2" min="1" max="6" step="1"></label>
           <label class="wm-ctl">maxLetterSpacing <input type="number" data-opt="maxLetterSpacing" value="0.06" min="0" max="1" step="0.01"></label>
           <label class="wm-ctl">step <input type="number" data-opt="step" value="0.004" min="0.001" max="0.05" step="0.001"></label>
@@ -265,6 +273,7 @@ thing always turns out exactly the<br>
           <span class="wm-status" id="status-h"><span class="wm-status-dot"></span><span id="status-h-text">measuring...</span></span>
         </div>
         <div class="wm-controls" id="controls-h">
+          <label class="wm-ctl">strategy <select data-opt="strategy"><option value="local" selected>local</option><option value="minimal">minimal</option><option value="even">even</option></select></label>
           <label class="wm-ctl">minLastLineWords <input type="number" data-opt="minLastLineWords" value="2" min="1" max="6" step="1"></label>
           <label class="wm-ctl">maxLetterSpacing <input type="number" data-opt="maxLetterSpacing" value="0.06" min="0" max="1" step="0.01"></label>
           <label class="wm-ctl">step <input type="number" data-opt="step" value="0.004" min="0.001" max="0.05" step="0.001"></label>
@@ -326,19 +335,22 @@ thing always turns out exactly the<br>
   // own instance, changing one leaves the other (and the lede) untouched.
   function wirePlayground(cfg) {
     var controls = document.getElementById(cfg.controlsId);
-    var inputs = Array.prototype.slice.call(controls.querySelectorAll('input[data-opt]'));
+    var fields = Array.prototype.slice.call(controls.querySelectorAll('[data-opt]'));
+    var defaults = fields.map(function (field) { return field.value; }); // for reset
     var instance = null;
 
     function readConfig() {
       var opts = {};
-      inputs.forEach(function (input) {
-        var value = parseFloat(input.value);
+      fields.forEach(function (field) {
+        var key = field.dataset.opt;
+        if (field.tagName === 'SELECT') { opts[key] = field.value; return; } // strategy
+        var value = parseFloat(field.value);
         if (isNaN(value)) return; // blank field -> fall back to the library's own default
-        if (input.dataset.opt === 'minLastLineWords') value = Math.max(1, Math.round(value));
-        if (input.dataset.opt === 'maxLetterSpacing') value = Math.min(1, Math.max(0, value));
+        if (key === 'minLastLineWords') value = Math.max(1, Math.round(value));
+        if (key === 'maxLetterSpacing') value = Math.min(1, Math.max(0, value));
         // step must stay positive, or the tightening loop can't make progress
-        if (input.dataset.opt === 'step') value = Math.max(0.001, value);
-        opts[input.dataset.opt] = value;
+        if (key === 'step') value = Math.max(0.001, value);
+        opts[key] = value;
       });
       return opts;
     }
@@ -350,11 +362,13 @@ thing always turns out exactly the<br>
       instance = window.Widowmender.init(cfg.selector, opts);
     }
 
-    inputs.forEach(function (input) { input.addEventListener('input', apply); });
+    fields.forEach(function (field) {
+      field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', apply);
+    });
     var reset = controls.querySelector('[data-reset]');
     if (reset) {
       reset.addEventListener('click', function () {
-        inputs.forEach(function (input) { input.value = input.getAttribute('value'); });
+        fields.forEach(function (field, i) { field.value = defaults[i]; });
         apply();
       });
     }

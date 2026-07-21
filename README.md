@@ -42,9 +42,21 @@ Widowmender ships with sensible defaults baked in, but feel free to tweak the (f
 
 4. `step: 0.004`
 
-5. `onProcess: null` (optional callback, called as `onProcess(element, result)` after each element is processed; `result.method` is one of `'none'` (no widow), `'tighten'`, `'nbsp'`, or `'skip'`)
+5. `strategy: 'local'` (where to tighten to pull the widow up)
+
+6. `onProcess: null` (optional callback, called as `onProcess(element, result)` after each element is processed; `result.method` is one of `'none'` (no widow), `'tighten'`, `'nbsp'`, or `'skip'`)
 
 On a measure too narrow to bind the tail without overflowing the container, the non-breaking-space fallback stands down rather than break the layout: it leaves the widow in place and reports `method: 'skip'`.
+
+### Tightening strategy
+
+When it fixes a widow by tightening, Widowmender has to choose *which* text to tighten. The second-to-last line is the obvious place, but it isn't always the cheapest — a short line ending a sentence higher up often has more slack, so nudging it clears the widow with far less tracking. Pick with `strategy`:
+
+- `'local'` (default) — tighten the last two lines. The change stays at the bottom of the paragraph, next to the problem; simplest, and steadiest while a box is being resized.
+- `'minimal'` — probe every line and tighten the single one that clears the widow with the least tracking. Gentlest tracking (often several times gentler than `'local'`), at the cost of a reflow that can ripple through more lines.
+- `'even'` — track the whole paragraph uniformly by the least amount that clears the widow. The classic typesetter's move: evenest color, no single line stands out.
+
+On a static page the reader never sees the pre-fix layout, so the extra reflow of `'minimal'`/`'even'` is invisible — only the (smaller) tracking shows. `'local'` is the default mainly because it's the most stable to watch during live resizing. The demo below lets you flip between all three on the same paragraph.
 
 ## Tests
 

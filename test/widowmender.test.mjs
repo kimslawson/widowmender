@@ -223,7 +223,7 @@ await test('treats minLastLineWords as the widow threshold', async () => {
   await page.evaluate(() => window.__wm.destroy());
 
   // Raised threshold (3): the same layout now counts as a widow, and the fix
-  // must GENUINELY resolve it — the last line has to end up with >= 3 words,
+  // must GENUINELY resolve it: the last line has to end up with >= 3 words,
   // not merely report a method. (Reporting without checking the outcome is
   // exactly how a no-op fallback once passed for a fix.)
   await initAndSettle(page, '.widow', { minLastLineWords: 3 });
@@ -326,6 +326,72 @@ await test('a non-positive step cannot spin the tightening loop forever', async 
   } finally {
     await page.close().catch(() => {});
   }
+});
+
+await test('strategy "even" mends a widow by tightening the whole paragraph', async () => {
+  const page = await newFixturePage();
+  const width = await page.evaluate(() => window.findWidthFor(document.getElementById('p'), 1));
+  assert.ok(width, 'no natural widow found');
+  await page.evaluate((w) => (document.getElementById('p').style.width = w + 'px'), width);
+
+  await initAndSettle(page, '.widow', { strategy: 'even' });
+  const result = await page.evaluate(() => window.__results[window.__results.length - 1]);
+  assert.ok(['tighten', 'nbsp'].includes(result.method), `expected a fix, got "${result.method}"`);
+  const after = await page.evaluate(() => window.measure(document.getElementById('p')));
+  assert.ok(after.last.length >= 2, `widow should be gone, last line: "${after.last.join(' ')}"`);
+  if (result.method === 'tighten') {
+    const cover = await page.evaluate(() => ({
+      inSpan: document.querySelectorAll('#p .wm-tighten .wm-word').length,
+      total: document.querySelectorAll('#p .wm-word').length,
+    }));
+    assert.equal(cover.inSpan, cover.total, 'even must wrap every word in one tighten span');
+  }
+  await page.close();
+});
+
+await test('strategy "minimal" never needs more tracking than the default local', async () => {
+  const page = await newFixturePage();
+  const width = await page.evaluate(() => window.findWidthFor(document.getElementById('p'), 1));
+  assert.ok(width, 'no natural widow found');
+  await page.evaluate((w) => (document.getElementById('p').style.width = w + 'px'), width);
+
+  await initAndSettle(page, '.widow', { strategy: 'local' });
+  const local = await page.evaluate(() => window.__results[window.__results.length - 1]);
+  await page.evaluate(() => window.__wm.destroy());
+
+  await initAndSettle(page, '.widow', { strategy: 'minimal' });
+  const minimal = await page.evaluate(() => window.__results[window.__results.length - 1]);
+
+  assert.equal(local.method, 'tighten', 'local should mend this widow by tightening');
+  assert.equal(minimal.method, 'tighten', 'minimal should mend this widow by tightening');
+  assert.ok(
+    minimal.spacing <= local.spacing + 1e-9,
+    `minimal (${minimal.spacing}) must not exceed local (${local.spacing})`
+  );
+  const after = await page.evaluate(() => window.measure(document.getElementById('p')));
+  assert.ok(after.last.length >= 2, `widow should be gone, last line: "${after.last.join(' ')}"`);
+  await page.close();
+});
+
+await test('an unknown strategy falls back to local behavior', async () => {
+  const page = await newFixturePage();
+  const width = await page.evaluate(() => window.findWidthFor(document.getElementById('p'), 1));
+  assert.ok(width, 'no natural widow found');
+  await page.evaluate((w) => (document.getElementById('p').style.width = w + 'px'), width);
+
+  await initAndSettle(page, '.widow', { strategy: 'local' });
+  const local = await page.evaluate(() => window.__results[window.__results.length - 1]);
+  await page.evaluate(() => window.__wm.destroy());
+
+  await initAndSettle(page, '.widow', { strategy: 'nonsense' });
+  const bogus = await page.evaluate(() => window.__results[window.__results.length - 1]);
+
+  assert.equal(bogus.method, local.method, 'unknown strategy should behave like local');
+  assert.ok(
+    Math.abs(bogus.spacing - local.spacing) < 1e-9,
+    `unknown strategy should tighten like local (${local.spacing}), got ${bogus.spacing}`
+  );
+  await page.close();
 });
 
 await test('preserves inline markup (em, strong, a) while wrapping words', async () => {
