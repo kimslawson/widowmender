@@ -50,17 +50,17 @@ On a measure too narrow to bind the tail without overflowing the container, the 
 
 ### Tightening strategy
 
-When it fixes a widow by tightening, Widowmender has to choose *which* text to tighten. The second-to-last line is the obvious place, but it isn't always the cheapest — a short line ending a sentence higher up often has more slack, so nudging it clears the widow with far less tracking. Pick with `strategy`:
+When it fixes a widow by tightening, Widowmender has to choose *which* text to tighten. The second-to-last line is the obvious place, but it isn’t always the cheapest — a short line ending a sentence higher up often has more slack, so nudging it clears the widow with far less tracking. Pick with `strategy`:
 
-- `'local'` (default) — tighten the last two lines. The change stays at the bottom of the paragraph, next to the problem; simplest, and steadiest while a box is being resized.
-- `'minimal'` — probe every line and tighten the single one that clears the widow with the least tracking. Gentlest tracking (often several times gentler than `'local'`), at the cost of a reflow that can ripple through more lines.
-- `'even'` — track the whole paragraph uniformly by the least amount that clears the widow. The classic typesetter's move: evenest color, no single line stands out.
+- `'local'` (default): tighten the last two lines. The change stays at the bottom of the paragraph, next to the problem; simplest, and steadiest while a box is being resized.
+- `'minimal'`: probe every line and tighten the single one that clears the widow with the least tracking. Gentlest tracking (often several times gentler than `'local'`), at the cost of a reflow that can ripple through more lines.
+- `'even'`: track the whole paragraph uniformly by the least amount that clears the widow. The classic typesetter’s move: evenest color, no single line stands out.
 
-On a static page the reader never sees the pre-fix layout, so the extra reflow of `'minimal'`/`'even'` is invisible — only the (smaller) tracking shows. `'local'` is the default mainly because it's the most stable to watch during live resizing. The demo below lets you flip between all three on the same paragraph.
+On a static page the reader never sees the pre-fix layout, so the extra reflow of `'minimal'`/`'even'` is invisible — only the (smaller) tracking shows. `'local'` is the default mainly because it’s the most stable to watch during live resizing. The demo below lets you flip between all three on the same paragraph.
 
 ## Tests
 
-There's a small Playwright-driven test suite that exercises the library in a real browser:
+There’s a small Playwright-driven test suite that exercises the library in a real browser:
 
 ```
 npm install
