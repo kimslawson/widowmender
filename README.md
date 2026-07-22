@@ -58,6 +58,10 @@ When it fixes a widow by tightening, Widowmender has to choose *which* text to t
 
 On a static page the reader never sees the pre-fix layout, so the extra reflow of `'minimal'`/`'even'` is invisible — only the (smaller) tracking shows. `'local'` is the default mainly because it’s the most stable to watch during live resizing. The demo below lets you flip between all three on the same paragraph.
 
+## Demo
+
+[Here’s a demo](https://slawson.org/widowmender/) where you can play with the options and see the results in real time.
+
 ## Tests
 
 There’s a small Playwright-driven test suite that exercises the library in a real browser:
